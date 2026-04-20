@@ -1,4 +1,4 @@
-package model;
+package org.carsharingapp.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
