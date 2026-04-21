@@ -3,6 +3,7 @@ package org.carsharingapp.service.car;
 import lombok.RequiredArgsConstructor;
 import org.carsharingapp.dto.car.CarDto;
 import org.carsharingapp.dto.car.CreateCarRequestDto;
+import org.carsharingapp.dto.car.UpdateCarRequestDto;
 import org.carsharingapp.exeption.EntityNotFoundException;
 import org.carsharingapp.mapper.CarMapper;
 import org.carsharingapp.model.Car;
@@ -20,6 +21,9 @@ public class CarServiceImpl implements CarService {
     @Override
     public CarDto save(CreateCarRequestDto requestDto) {
         Car car = carMapper.toModel(requestDto);
+        if (carRepository.findByBrandAndModel(car.getBrand(), car.getModel()).isPresent()) {
+            throw new RuntimeException("Car exist in DB");
+        }
         return carMapper.toDto(carRepository.save(car));
     }
 
@@ -36,7 +40,7 @@ public class CarServiceImpl implements CarService {
     }
 
     @Override
-    public CarDto update(Long id, CreateCarRequestDto requestDto) {
+    public CarDto update(Long id, UpdateCarRequestDto requestDto) {
         Car car = carRepository.findById(id).orElseThrow(() ->
                 new EntityNotFoundException("Can't find car with id: " + id));
         carMapper.updateCarFromDto(requestDto, car);

@@ -6,10 +6,12 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.carsharingapp.dto.car.CarDto;
 import org.carsharingapp.dto.car.CreateCarRequestDto;
+import org.carsharingapp.dto.car.UpdateCarRequestDto;
 import org.carsharingapp.service.car.CarService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,37 +25,42 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/cars")
-@Tag(name = "Cars management", description = "Endpoints for car authentication")
+@Tag(name = "Cars management", description = "Endpoints for car management")
 public class CarController {
     private final CarService carService;
 
     @Operation(summary = "Get all cars with pagination")
+    @PreAuthorize("hasAnyRole('MANAGER', 'CUSTOMER')")
     @GetMapping
     public Page<CarDto> getAll(Pageable pageable) {
         return carService.findAll(pageable);
     }
 
     @Operation(summary = "Create a new car")
+    @PreAuthorize("hasRole('MANAGER')")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public CarDto createBook(@RequestBody @Valid CreateCarRequestDto requestDto) {
+    public CarDto createCar(@RequestBody @Valid CreateCarRequestDto requestDto) {
         return carService.save(requestDto);
     }
 
     @Operation(summary = "Get car by id")
+    @PreAuthorize("hasAnyRole('MANAGER', 'CUSTOMER')")
     @GetMapping("/{id}")
     public CarDto getCarById(@PathVariable Long id) {
         return carService.findCarById(id);
     }
 
+    @PreAuthorize("hasRole('MANAGER')")
     @Operation(summary = "Update car by id")
     @PutMapping("/{id}")
-    public CarDto updateBook(@PathVariable @Valid Long id,
-                              @RequestBody CreateCarRequestDto requestDto) {
+    public CarDto updateCar(@PathVariable @Valid Long id,
+                              @RequestBody UpdateCarRequestDto requestDto) {
         return carService.update(id, requestDto);
     }
 
     @Operation(summary = "Delete car by id")
+    @PreAuthorize("hasRole('MANAGER')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {

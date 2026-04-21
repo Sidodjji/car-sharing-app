@@ -3,6 +3,7 @@ package org.carsharingapp.mapper;
 import org.carsharingapp.config.MapperConfig;
 import org.carsharingapp.dto.car.CarDto;
 import org.carsharingapp.dto.car.CreateCarRequestDto;
+import org.carsharingapp.dto.car.UpdateCarRequestDto;
 import org.carsharingapp.model.Car;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
@@ -13,5 +14,5 @@ public interface CarMapper {
 
     Car toModel(CreateCarRequestDto requestDto);
 
-    void updateCarFromDto(CreateCarRequestDto requestDto, @MappingTarget Car car);
+    void updateCarFromDto(UpdateCarRequestDto requestDto, @MappingTarget Car car);
 }

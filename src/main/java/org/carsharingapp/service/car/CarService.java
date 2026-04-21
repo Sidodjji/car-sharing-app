@@ -2,6 +2,7 @@ package org.carsharingapp.service.car;
 
 import org.carsharingapp.dto.car.CarDto;
 import org.carsharingapp.dto.car.CreateCarRequestDto;
+import org.carsharingapp.dto.car.UpdateCarRequestDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -12,7 +13,7 @@ public interface CarService {
 
     CarDto findCarById(Long id);
 
-    CarDto update(Long id, CreateCarRequestDto requestDto);
+    CarDto update(Long id, UpdateCarRequestDto requestDto);
 
     void deleteById(Long id);
 }

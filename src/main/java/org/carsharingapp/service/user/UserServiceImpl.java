@@ -1,15 +1,17 @@
 package org.carsharingapp.service.user;
 
-import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import org.carsharingapp.dto.user.UpdateUserRequestDto;
+import org.carsharingapp.dto.user.UpdateUserRoleRequestDto;
 import org.carsharingapp.dto.user.UserRegistrationRequestDto;
 import org.carsharingapp.dto.user.UserResponseDto;
+import org.carsharingapp.exeption.EntityNotFoundException;
 import org.carsharingapp.exeption.RegistrationException;
 import org.carsharingapp.mapper.UserMapper;
-import org.carsharingapp.model.Role;
 import org.carsharingapp.model.User;
-import org.carsharingapp.repository.RoleRepository;
 import org.carsharingapp.repository.UserRepository;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,8 +23,6 @@ public class UserServiceImpl implements UserService {
 
     private final UserMapper userMapper;
 
-    private final RoleRepository roleRepository;
-
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -33,10 +33,36 @@ public class UserServiceImpl implements UserService {
         }
         User user = userMapper.toModel(requestDto);
         user.setPassword(passwordEncoder.encode(requestDto.getPassword()));
-        Role userRole = roleRepository.findByRole(Role.RoleName.CUSTOMER).orElseThrow(
-                () -> new RuntimeException("Role USER not found"));
-        user.setRoles(Set.of(userRole));
+        user.setRole(User.Role.CUSTOMER);
         userRepository.save(user);
         return userMapper.toDto(user);
+    }
+
+    @Override
+    public void update(UpdateUserRequestDto requestDto) {
+        User user = getAuthenticatedUser();
+        userMapper.updateUserFromDto(requestDto, user);
+        userRepository.save(user);
+    }
+
+    @Override
+    public UserResponseDto findUser() {
+        return userMapper.toDto(getAuthenticatedUser());
+    }
+
+    @Override
+    public void updateUserRole(Long id, UpdateUserRoleRequestDto requestDto) {
+        User user = userRepository.findById(id).orElseThrow(() ->
+                new EntityNotFoundException("Can't find user with id: " + id));
+        user.setRole(requestDto.getRoleName());
+        userRepository.save(user);
+    }
+
+    private User getAuthenticatedUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof User user) {
+            return user;
+        }
+        throw new RuntimeException("Can't find authenticated user");
     }
 }
