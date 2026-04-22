@@ -12,6 +12,7 @@ import org.carsharingapp.model.Rental;
 import org.carsharingapp.model.User;
 import org.carsharingapp.repository.CarRepository;
 import org.carsharingapp.repository.RentalRepository;
+import org.carsharingapp.service.notification.NotificationService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -25,6 +26,7 @@ public class RentalServiceImpl implements RentalService {
     private final RentalRepository rentalRepository;
     private final RentalMapper rentalMapper;
     private final CarRepository carRepository;
+    private final NotificationService notificationService;
 
     @Override
     public RentalDto save(CreateRentalRequestDto requestDto) {
@@ -32,12 +34,14 @@ public class RentalServiceImpl implements RentalService {
         Rental rental = rentalMapper.toModel(requestDto);
         rental.setUserId(user.getId());
         rental.setRentalDate(LocalDate.now());
-        rental.setReturnDate(LocalDate.now().plusDays(1));
+        rental.setReturnDate(LocalDate.now().plusDays(requestDto.getDaysCount()));
         Car car = carRepository.findById(rental.getCarId()).orElseThrow(() ->
                 new EntityNotFoundException("Can't find car with id: " + rental.getCarId()));
         car.setInventory(car.getInventory() - 1);
         carRepository.save(car);
-        return rentalMapper.toDto(rentalRepository.save(rental));
+        Rental savedRental = rentalRepository.save(rental);
+        notificationService.sendMessage(buildRentalCreatedMessage(savedRental));
+        return rentalMapper.toDto(savedRental);
     }
 
     @Override
@@ -47,10 +51,10 @@ public class RentalServiceImpl implements RentalService {
             Pageable pageable) {
         Long resolvedUserId = resolveRequestedUserId(userId);
         if (isActive) {
-            return rentalRepository.findByUserIdAndActualReturnDateIsNull(resolvedUserId, pageable)
+            return rentalRepository.findByUserIdAndActiveTrue(resolvedUserId, pageable)
                     .map(rentalMapper::toDtoWihActualReturnDate);
         }
-        return rentalRepository.findByUserIdAndActualReturnDateIsNotNull(resolvedUserId, pageable)
+        return rentalRepository.findByUserIdAndActiveFalse(resolvedUserId, pageable)
                 .map(rentalMapper::toDtoWihActualReturnDate);
     }
 
@@ -63,6 +67,7 @@ public class RentalServiceImpl implements RentalService {
     public RentalDtoWithActualReturnDate returnCar(Long rentalId) {
         Rental rental = getAccessibleRental(rentalId);
         rental.setActualReturnDate(LocalDate.now());
+        rental.setActive(false);
         Car car = carRepository.findById(rental.getCarId()).orElseThrow(() ->
                 new EntityNotFoundException("Can't find car with id: " + rental.getCarId()));
         car.setInventory(car.getInventory() + 1);
@@ -102,5 +107,22 @@ public class RentalServiceImpl implements RentalService {
 
     private boolean isManager(User user) {
         return user.getRole() == User.Role.MANAGER;
+    }
+
+    private String buildRentalCreatedMessage(Rental rental) {
+        return """
+                <b>New rental created</b>
+                Rental id: <code>%d</code>
+                User id: <code>%d</code>
+                Car id: <code>%d</code>
+                Rental date: %s
+                Return date: %s
+                """.formatted(
+                rental.getId(),
+                rental.getUserId(),
+                rental.getCarId(),
+                rental.getRentalDate(),
+                rental.getReturnDate()
+        );
     }
 }
