@@ -22,4 +22,5 @@ public class Rental {
     private LocalDate actualReturnDate;
     private Long carId;
     private Long userId;
+    private boolean active = true;
 }
