@@ -46,4 +46,15 @@ public class CustomGlobalExceptionHandler {
     public ResponseEntity<String> handleRegistrationException(RegistrationException ex) {
         return new ResponseEntity<>("Registration Exception occurred", HttpStatus.CONFLICT);
     }
+
+    @ExceptionHandler(PaymentExeption.class)
+    public ResponseEntity<String> handlePaymentException(PaymentExeption ex) {
+        return new ResponseEntity<>("Payment Exception occurred", HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(StripeIntegrationException.class)
+    public ResponseEntity<String> handleStripeIntegrationException(StripeIntegrationException ex) {
+        return new ResponseEntity<>("Stripe integration Exception occurred", HttpStatus.BAD_GATEWAY);
+    }
+
 }
