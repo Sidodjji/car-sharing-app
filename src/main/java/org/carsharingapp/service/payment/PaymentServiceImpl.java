@@ -2,6 +2,8 @@ package org.carsharingapp.service.payment;
 
 import com.stripe.exception.StripeException;
 import com.stripe.model.checkout.Session;
+import java.math.BigDecimal;
+import java.time.temporal.ChronoUnit;
 import lombok.RequiredArgsConstructor;
 import org.carsharingapp.dto.payment.CreatePaymentRequestDto;
 import org.carsharingapp.dto.payment.PaymentDto;
@@ -22,8 +24,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.math.BigDecimal;
-import java.time.temporal.ChronoUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -50,7 +50,6 @@ public class PaymentServiceImpl implements PaymentService {
 
         Car car = carRepository.findById(rental.getCarId()).orElseThrow(() ->
                 new EntityNotFoundException("Can't find car by id: " + rental.getCarId()));
-
 
         long amountTotal = calculateTotal(rental, car).movePointRight(2).longValueExact();
         Payment payment = setPaymentFields(rental, amountTotal);

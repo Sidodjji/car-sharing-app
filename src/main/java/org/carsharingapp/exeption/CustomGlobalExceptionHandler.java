@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -54,7 +55,16 @@ public class CustomGlobalExceptionHandler {
 
     @ExceptionHandler(StripeIntegrationException.class)
     public ResponseEntity<String> handleStripeIntegrationException(StripeIntegrationException ex) {
-        return new ResponseEntity<>("Stripe integration Exception occurred", HttpStatus.BAD_GATEWAY);
+        return new ResponseEntity<>("Stripe integration Exception occurred",
+                HttpStatus.BAD_GATEWAY);
+    }
+
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<String> handleMissingHeader(
+            MissingRequestHeaderException ex
+    ) {
+        return ResponseEntity.badRequest()
+                .body("Missing required header: " + ex.getHeaderName());
     }
 
 }
