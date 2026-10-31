@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -46,4 +47,24 @@ public class CustomGlobalExceptionHandler {
     public ResponseEntity<String> handleRegistrationException(RegistrationException ex) {
         return new ResponseEntity<>("Registration Exception occurred", HttpStatus.CONFLICT);
     }
+
+    @ExceptionHandler(PaymentExeption.class)
+    public ResponseEntity<String> handlePaymentException(PaymentExeption ex) {
+        return new ResponseEntity<>("Payment Exception occurred", HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(StripeIntegrationException.class)
+    public ResponseEntity<String> handleStripeIntegrationException(StripeIntegrationException ex) {
+        return new ResponseEntity<>("Stripe integration Exception occurred",
+                HttpStatus.BAD_GATEWAY);
+    }
+
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public ResponseEntity<String> handleMissingHeader(
+            MissingRequestHeaderException ex
+    ) {
+        return ResponseEntity.badRequest()
+                .body("Missing required header: " + ex.getHeaderName());
+    }
+
 }
